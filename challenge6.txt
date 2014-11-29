@@ -1,0 +1,3 @@
+List challenge problems completed as part of the lab 6 handin, as well
+as the problem number.  If you worked any previous lab challenges and
+submitted them with this lab, list them here, along with the lab number.

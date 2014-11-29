@@ -1,0 +1,16 @@
+
+$(GUESTDIR)/$(OBJDIR)/kern/kernel:
+	cd $(GUESTDIR);$(MAKE)
+
+$(GUESTDIR)/$(OBJDIR)/boot/%.o: $(GUESTDIR)/boot/%.S
+	@echo + as $<
+	@mkdir -p $(@D)
+	$(V)$(CC) -nostdinc $(BOOT_CFLAGS) -c -o $@ $<
+
+$(GUESTDIR)/$(OBJDIR)/boot/boot: $(GUESTDIR)/$(OBJDIR)/boot/boot.o
+	@echo + ld $(GUESTDIR)/$(OBJDIR)/boot/boot
+	$(V)$(LD) $(BOOT_LDFLAGS) -N -e gboot_start -Ttext 0x7000 -o $@.out $^
+	$(V)$(OBJDUMP) -S $@.out >$@.asm
+	$(V)$(OBJCOPY) -S -O binary -j .text $@.out $@
+	$(V)perl boot/sign.pl $(GUESTDIR)/$(OBJDIR)/boot/boot
+

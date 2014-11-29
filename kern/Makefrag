@@ -1,0 +1,155 @@
+#
+# Makefile fragment for JOS kernel.
+# This is NOT a complete makefile;
+# you must run GNU make in the top-level directory
+# where the GNUmakefile is located.
+#
+
+OBJDIRS += kern
+
+KERN_LDFLAGS := $(LDFLAGS) -T kern/kernel.ld -nostdlib --no-gc-sections --print-gc-sections -Map=vivek.map
+
+# entry.S must be first, so that it's the first code in the text segment!!!
+#
+# We also snatch the use of a couple handy source files
+# from the lib directory, to avoid gratuitous code duplication.
+KERN_SRCFILES :=	kern/entry.S \
+            kern/bootstrap.S \
+			kern/init.c \
+			kern/console.c \
+			kern/monitor.c \
+			kern/pmap.c \
+			kern/env.c \
+			kern/kclock.c \
+			kern/picirq.c \
+			kern/printf.c \
+			kern/trap.c \
+			kern/trapentry.S \
+			kern/sched.c \
+			kern/syscall.c \
+			kern/kdebug.c \
+			lib/printfmt.c \
+			lib/readline.c \
+			lib/string.c  \
+			kern/libdwarf_rw.c \
+			kern/libdwarf_frame.c \
+			kern/libdwarf_lineno.c \
+			kern/elf_rw.c
+
+# Source files for LAB4
+KERN_SRCFILES +=	kern/mpentry.S \
+			kern/mpconfig.c \
+			kern/lapic.c \
+			kern/spinlock.c
+
+# Source files for LAB6
+KERN_SRCFILES +=	kern/e100.c \
+			kern/e1000.c \
+			kern/pci.c \
+			kern/time.c
+
+KERN_SRCFILES +=	vmm/ept.c \
+			vmm/vmx.c \
+			vmm/vmexits.c
+
+
+# Only build files if they exist.
+KERN_SRCFILES := $(wildcard $(KERN_SRCFILES))
+
+# Binary program images to embed within the kernel.
+KERN_BINFILES :=	user/hello
+KERN_BINFILES += user/idle
+# Binary files for LAB5
+KERN_BINFILES +=	user/testfilero \
+			user/spawnhello \
+			user/icode \
+			fs/fs
+
+# Binary files for LAB6
+KERN_BINFILES +=	user/testtime \
+			user/httpd \
+			user/echosrv \
+			user/echotest \
+			net/testoutput \
+			net/testinput \
+			net/ns
+
+# Binary files for LAB5
+KERN_BINFILES +=	user/testpteshare \
+			user/testfdsharing \
+			user/testpipe \
+			user/testpiperace \
+			user/testpiperace2 \
+			user/primespipe \
+			user/testkbd \
+			user/testshell
+
+# Binary files for LAB8
+KERN_BINFILES +=	user/vmm
+KERN_OBJFILES := $(patsubst %.c, $(OBJDIR)/%.o, $(KERN_SRCFILES))
+KERN_OBJFILES := $(patsubst %.S, $(OBJDIR)/%.o, $(KERN_OBJFILES))
+KERN_OBJFILES := $(patsubst $(OBJDIR)/lib/%, $(OBJDIR)/kern/%, $(KERN_OBJFILES))
+
+KERN_BINFILES := $(patsubst %, $(OBJDIR)/%, $(KERN_BINFILES))
+
+# How to build kernel object files
+$(OBJDIR)/kern/%.o: kern/%.c $(OBJDIR)/.vars.KERN_CFLAGS
+	@echo + cc $<
+	@mkdir -p $(@D)
+	$(V)$(CC) -nostdinc $(KERN_CFLAGS) -c -o $@ $<
+
+$(OBJDIR)/kern/%.o: kern/%.S $(OBJDIR)/.vars.KERN_CFLAGS
+	@echo + as $<
+	@mkdir -p $(@D)
+	$(V)$(CC) -nostdinc $(KERN_CFLAGS) -c -o $@ $<
+
+$(OBJDIR)/vmm/%.o: vmm/%.S $(OBJDIR)/.vars.KERN_CFLAGS
+	@echo + as $<
+	@mkdir -p $(@D)
+	$(V)$(CC) -nostdinc $(KERN_CFLAGS) -c -o $@ $<
+
+$(OBJDIR)/kern/%.o: lib/%.c $(OBJDIR)/.vars.KERN_CFLAGS
+	@echo + cc $<
+	@mkdir -p $(@D)
+	$(V)$(CC) -nostdinc $(KERN_CFLAGS) -c -o $@ $<
+	
+$(OBJDIR)/vmm/%.o: vmm/%.c $(OBJDIR)/.vars.KERN_CFLAGS
+	@echo + cc $<
+	@mkdir -p $(@D)
+	$(V)$(CC) -nostdinc $(KERN_CFLAGS) -c -o $@ $<
+
+# Special flags for kern/init
+$(OBJDIR)/kern/init.o: override KERN_CFLAGS+=$(INIT_CFLAGS)
+$(OBJDIR)/kern/init.o: $(OBJDIR)/.vars.INIT_CFLAGS
+
+# How to build the kernel itself
+$(OBJDIR)/kern/kernel: $(KERN_OBJFILES) $(KERN_BINFILES) kern/kernel.ld \
+	  $(OBJDIR)/.vars.KERN_LDFLAGS
+	@echo + ld $@
+	$(V)$(LD) -o $@ $(KERN_LDFLAGS) $(KERN_OBJFILES) $(GCC_LIB) -b binary $(KERN_BINFILES)
+	$(V)$(OBJDUMP) -S $@ > $@.asm
+	$(V)$(NM) -n $@ > $@.sym
+
+ifndef GUEST_KERN
+# How to build the kernel disk image
+$(OBJDIR)/kern/kernel.img: $(OBJDIR)/kern/kernel $(OBJDIR)/boot/boot
+	@echo + mk $@
+	$(V)dd if=/dev/zero of=$(OBJDIR)/kern/kernel.img~ bs=512 count=20000 2>/dev/null
+	$(V)dd if=$(OBJDIR)/boot/boot of=$(OBJDIR)/kern/kernel.img~ conv=notrunc 2>/dev/null
+	$(V)dd if=$(OBJDIR)/kern/kernel of=$(OBJDIR)/kern/kernel.img~ seek=1 conv=notrunc 2>/dev/null
+	$(V)mv $(OBJDIR)/kern/kernel.img~ $(OBJDIR)/kern/kernel.img
+
+
+all: $(OBJDIR)/kern/kernel.img
+
+else
+
+all: $(OBJDIR)/kern/kernel
+
+endif
+
+grub: $(OBJDIR)/jos-grub
+
+$(OBJDIR)/jos-grub: $(OBJDIR)/kern/kernel
+	@echo + oc $@
+	$(V)$(OBJCOPY) --adjust-vma=0x10000000 $^ $@

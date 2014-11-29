@@ -1,0 +1,125 @@
+#!/bin/sh
+
+verbose=false
+
+if [ "x$1" = "x-v" ]
+then
+	verbose=true
+	out=/dev/stdout
+	err=/dev/stderr
+else
+	out=/dev/null
+	err=/dev/null
+fi
+
+pts=5
+timeout=30
+preservefs=n
+bochs_pid=
+
+BOCHS_TIMEOUT=5
+BOCHS_OPTIONS=
+MAKE_OPTIONS=
+ALT_LFS="^"
+
+echo_n () {
+	# suns can't echo -n, and Mac OS X can't echo "x\c"
+	# assume argument has no doublequotes
+	awk 'BEGIN { printf("'"$*"'"); }' </dev/null
+}
+
+runbochs () {
+	# Find the address of the kernel readline function,
+	# which the kernel monitor uses to read commands interactively.
+	#brkaddr=`grep 'readline$' obj/kern/kernel.sym | sed -e's/ .*$//g'`
+	#echo "brkaddr $brkaddr"
+
+	# Run Bochs, setting a breakpoint at readline(),
+	# and feeding in appropriate commands to run, then quit.
+	t0=`date +%s.%N 2>/dev/null`
+
+	echo -en "\tRunning bochs..."
+	old_ifs="${LFS}"
+	LFS=${ALT_LFS}
+	bochs -q ${BOCHS_OPTIONS} >$out 2>$err &
+	LFS="${old_lfs}"
+	sleep ${BOCHS_TIMEOUT}
+	bochs_pid=$!
+	kill -TERM ${bochs_pid} >$out 2>$err
+	t1=`date +%s.%N 2>/dev/null`
+	time=`echo "scale=1; ($t1-$t0)/1" | sed 's/.N/.0/g' | bc 2>/dev/null`
+	time="(${time}s)"
+	echo -e "done."
+}
+
+runtest () {
+	echo -en "\tBuilding..."
+	rm -f bochs.out bochs.log >$out 2>$err
+	make clean >$out 2>$err
+	make guestvm >$out 2>$err
+	make ${MAKE_OPTIONS} >$out 2>$err
+	make ${MAKE_OPTIONS} bochsrc >$out 2>$err
+	echo -e "done."
+	runbochs
+}
+
+# Initialize score record
+score=0
+totalscore=0
+
+# Testcase 1: EPT extension support foolproof check
+	echo "EPT support foolproof check: "
+	pts=20
+	totalscore=`expr $totalscore + $pts`
+	BOCHS_OPTIONS="display_library:nogui cpuid:vmx=1"
+	MAKE_OPTIONS="DEFS='-DTEST=user_vmm'"
+	runtest
+	BOCHS_OPTIONS=
+	MAKE_OPTIONS=
+
+	if grep "\[VMM\] EPT extension not supported\." bochs.out >/dev/null
+	then
+		score=`expr $score + $pts`
+		echo -e "\tSuccess: $pts points"
+	else
+		echo -e "\tFailed: 0 points"
+	fi
+
+# Testcase 2: sys_ept_map() & related functionality testcase
+	echo "EPT related functionality check: "
+	pts=40
+	totalscore=`expr $totalscore + $pts`
+	BOCHS_OPTIONS="display_library:nogui"
+	MAKE_OPTIONS="DEFS='-DTEST_EPT_MAP'"
+	runtest
+	BOCHS_OPTIONS=
+	MAKE_OPTIONS=
+
+	if grep "Cheers! sys_ept_map seems to work correctly\." bochs.out >/dev/null
+	then
+		score=`expr $score + $pts`
+		echo -e "\tSuccess: $pts points"
+	else
+		echo -e "\tFailed: 0 points"
+	fi
+
+# Testcase 3: guest vmx exposure testcase
+	echo "Guest VMX exposure check: "
+	pts=20
+	totalscore=`expr $totalscore + $pts`
+	BOCHS_OPTIONS="display_library:nogui"
+	MAKE_OPTIONS="DEFS='-DTEST=user_vmm'"
+	runtest
+	BOCHS_OPTIONS=
+	MAKE_OPTIONS=
+
+	if grep "VMX extension hidden from guest\." bochs.out >/dev/null
+	then
+		score=`expr $score + $pts`
+		echo -e "\tSuccess: $pts points"
+	else
+		echo -e "\tFailed: 0 points"
+	fi
+
+echo "Grading finished. Score = $score/$totalscore"
+
