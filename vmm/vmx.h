@@ -25,6 +25,8 @@ struct vmx_msr_entry {
     uint64_t msr_value;
 } __attribute__((__packed__));
 
+inline bool vmx_check_ept();
+inline bool vmx_check_support();
 int vmx_init_vmxon();
 int vmx_vmrun( struct Env *e );
 struct PageInfo * vmx_init_vmcs();

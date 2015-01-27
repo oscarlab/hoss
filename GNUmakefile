@@ -5,8 +5,16 @@
 #	Recursive Make Considered Harmful
 #	http://aegis.sourceforge.net/auug97.pdf
 #
+
+
+ifdef GUEST_KERN
+OBJDIR := vmm/guest/obj
+GUSETOBJDIR := vmm/guest/obj
+else
 OBJDIR := obj
+endif
 GUESTDIR := vmm/guest
+
 
 
 # Run 'make V=1' to turn on verbose commands, or 'make V=0' to turn them off.
@@ -127,10 +135,10 @@ USER_CFLAGS := $(CFLAGS) -DJOS_USER -gdwarf-2 -mcmodel=large -m64
 ifdef GUEST_KERN
 KERN_CFLAGS += -DVMM_GUEST
 USER_CFLAGS += -DVMM_GUEST
-endif
-
+else
 KERN_CFLAGS += -DVMM_HOST
 USER_CFLAGS += -DVMM_HOST
+endif
 
 # Update .vars.X if variable X has changed since the last make run.
 #
@@ -152,7 +160,9 @@ include lib/Makefrag
 include user/Makefrag
 include fs/Makefrag
 include net/Makefrag
+ifndef GUEST_KERN
 include vmm/Makefrag
+endif
 
 
 

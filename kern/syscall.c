@@ -12,7 +12,10 @@
 #include <kern/console.h>
 #include <kern/sched.h>
 #include <kern/time.h>
+#ifndef VMM_GUEST
 #include <vmm/ept.h>
+#include <vmm/vmx.h>
+#endif
 
 // Print a string to the system console.
 // The string is exactly 'len' characters long.
@@ -305,6 +308,7 @@ sys_time_msec(void)
 // Hint: The TA solution uses ept_map_hva2gpa().  A guest environment uses 
 //       env_pml4e to store the root of the extended page tables.
 // 
+#ifndef VMM_GUEST
 static int
 sys_ept_map(envid_t srcenvid, void *srcva,
 	    envid_t guest, void* guest_pa, int perm)
@@ -312,21 +316,27 @@ sys_ept_map(envid_t srcenvid, void *srcva,
 		/* Your code here */
 		panic ("sys_ept_map not implemented");
 		return 0;
-	}
+}
 
-	static envid_t
-		sys_env_mkguest(uint64_t gphysz, uint64_t gRIP) {
-		int r;
-		struct Env *e;
+static envid_t
+	sys_env_mkguest(uint64_t gphysz, uint64_t gRIP) {
+	int r;
+	struct Env *e;
 
-		if ((r = env_guest_alloc(&e, curenv->env_id)) < 0)
-			return r;
-		e->env_status = ENV_NOT_RUNNABLE;
-		e->env_vmxinfo.phys_sz = gphysz;
-		e->env_tf.tf_rip = gRIP;
-		return e->env_id;
-	}
-
+	// Check if the processor has VMX support.
+	if ( !vmx_check_support() ) {
+		return -E_NO_VMX;
+	} else if ( !vmx_check_ept() ) {
+		return -E_NO_EPT;
+	} 
+	if ((r = env_guest_alloc(&e, curenv->env_id)) < 0)
+		return r;
+	e->env_status = ENV_NOT_RUNNABLE;
+	e->env_vmxinfo.phys_sz = gphysz;
+	e->env_tf.tf_rip = gRIP;
+	return e->env_id;
+}
+#endif //!VMM_GUEST
 
 
 // Dispatches to the correct kernel function, passing the arguments.
@@ -340,10 +350,12 @@ syscall(uint64_t syscallno, uint64_t a1, uint64_t a2, uint64_t a3, uint64_t a4, 
 	panic("syscall not implemented");
 
 	switch (syscallno) {
+#ifndef VMM_GUEST
 	case SYS_ept_map:
 		return sys_ept_map(a1, (void*) a2, a3, (void*) a4, a5);
 	case SYS_env_mkguest:
 		return sys_env_mkguest(a1, a2);
+#endif
 		
 	default:
 		return -E_NO_SYS;

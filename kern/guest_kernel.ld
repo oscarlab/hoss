@@ -5,27 +5,27 @@
 OUTPUT_FORMAT("elf64-x86-64", "elf64-x86-64", "elf64-x86-64")
 OUTPUT_ARCH(i386:x86-64)
 ENTRY(_head64)
-/* STARTUP(obj/kern/bootstrap.o) */
+/* STARTUP(vmm/guest/obj/kern/bootstrap.o) */
 
 SECTIONS
 {
     . = 0x100000;
 
     .bootstrap : {
-        obj/kern/bootstrap.o (.text .data .bss)
+        vmm/guest/obj/kern/bootstrap.o (.text .data .bss)
     }
     
 	/* Link the kernel at this address: "." means the current address */
 	. = 0x8004200000;
 
 	.text : AT(0x200000) {
-		*(EXCLUDE_FILE(obj/kern/bootstrap.o) .text .stub .text.* .gnu.linkonce.t.*)
+		*(EXCLUDE_FILE(vmm/guest/obj/kern/bootstrap.o) .text .stub .text.* .gnu.linkonce.t.*)
 	}
 
 	PROVIDE(etext = .);	/* Define the 'etext' symbol to this value */
 
 	.rodata : {
-		*(EXCLUDE_FILE(obj/kern/bootstrap.o) .rodata .rodata.* .gnu.linkonce.r.*)
+		*(EXCLUDE_FILE(vmm/guest/obj/kern/bootstrap.o) .rodata .rodata.* .gnu.linkonce.r.*)
 	}
 
 	/* Adjust the address for the data segment to the next page */
@@ -33,13 +33,13 @@ SECTIONS
 
 	/* The data segment */
 	.data : {
-		*(EXCLUDE_FILE(obj/kern/bootstrap.o) .data)
+		*(EXCLUDE_FILE(vmm/guest/obj/kern/bootstrap.o) .data)
 	}
 
 	PROVIDE(edata = .);
 
 	.bss : {
-		*(EXCLUDE_FILE(obj/kern/bootstrap.o) .bss)
+		*(EXCLUDE_FILE(vmm/guest/obj/kern/bootstrap.o) .bss)
 	}
 
 	PROVIDE(end = .);

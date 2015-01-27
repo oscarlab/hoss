@@ -28,11 +28,20 @@ int env_guest_alloc(struct Env **newenv_store, envid_t parent_id);
 // ENV_CREATE because of the C pre-processor's argument prescan rule.
 #define ENV_PASTE3(x, y, z) x ## y ## z
 
+#ifndef VMM_GUEST
 #define ENV_CREATE(x, type)						\
 	do {								\
 		extern uint8_t ENV_PASTE3(_binary_obj_, x, _start)[];	\
 		env_create(ENV_PASTE3(_binary_obj_, x, _start),		\
 			   type);					\
 	} while (0)
+#else
+#define ENV_CREATE(x, type)						\
+	do {								\
+		extern uint8_t ENV_PASTE3(_binary_vmm_guest_obj_, x, _start)[];	\
+		env_create(ENV_PASTE3(_binary_vmm_guest_obj_, x, _start),		\
+			   type);					\
+	} while (0)
+#endif //!VMM_GUEST
 
 #endif // !JOS_KERN_ENV_H

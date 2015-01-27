@@ -1,8 +1,8 @@
 
 $(GUESTDIR)/$(OBJDIR)/kern/kernel:
-	cd $(GUESTDIR);$(MAKE)
+	$(MAKE) GUEST_KERN=true
 
-$(GUESTDIR)/$(OBJDIR)/boot/%.o: $(GUESTDIR)/boot/%.S
+$(GUESTDIR)/$(OBJDIR)/boot/%.o: guest_boot/%.S
 	@echo + as $<
 	@mkdir -p $(@D)
 	$(V)$(CC) -nostdinc $(BOOT_CFLAGS) -c -o $@ $<
@@ -13,4 +13,3 @@ $(GUESTDIR)/$(OBJDIR)/boot/boot: $(GUESTDIR)/$(OBJDIR)/boot/boot.o
 	$(V)$(OBJDUMP) -S $@.out >$@.asm
 	$(V)$(OBJCOPY) -S -O binary -j .text $@.out $@
 	$(V)perl boot/sign.pl $(GUESTDIR)/$(OBJDIR)/boot/boot
-

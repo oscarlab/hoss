@@ -7,6 +7,7 @@
 
 void sched_halt(void);
 
+#ifndef VMM_GUEST
 #include <vmm/vmx.h>
 static int
 vmxon() {
@@ -21,6 +22,7 @@ vmxon() {
 	}
 	return 0;
 }
+#endif
 
 // Choose a user environment to run and run it.
 void

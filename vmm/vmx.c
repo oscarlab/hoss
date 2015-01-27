@@ -24,7 +24,7 @@
  * Hint: the TA solution uses the BIT() macro 
  *  to simplify the implementation.
  */
-static inline bool vmx_check_support() {
+inline bool vmx_check_support() {
     uint32_t eax, ebx, ecx, edx;
     cpuid( 1, &eax, &ebx, &ecx, &edx );
     /* Your code here */ 
@@ -46,7 +46,7 @@ static inline bool vmx_check_support() {
  *   that secondary VMX controls are enabled, and then that
  *   EPT is available.
  */
-static inline bool vmx_check_ept() {
+inline bool vmx_check_ept() {
     /* Your code here */
     panic ("ept check not implemented\n");
     cprintf("[VMM] EPT extension not supported.\n");
@@ -109,12 +109,6 @@ struct PageInfo * vmx_init_vmcs() {
  * operation. Returns a >=0 value if VMX root operation is achieved.
  */
 int vmx_init_vmxon() {
-    // Check if the processor has VMX support.
-    if ( !vmx_check_support() ) {
-        return -E_NO_VMX;
-    } else if ( !vmx_check_ept() ) {
-       return -E_NO_EPT;
-    } 
     
     //Alocate mem and init the VMXON region.
     struct PageInfo *p_vmxon_region = vmx_init_vmcs();

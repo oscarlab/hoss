@@ -7,7 +7,11 @@
 
 OBJDIRS += kern
 
+ifdef GUEST_KERN
+KERN_LDFLAGS := $(LDFLAGS) -T kern/guest_kernel.ld -nostdlib --no-gc-sections --print-gc-sections -Map=vivek.map
+else
 KERN_LDFLAGS := $(LDFLAGS) -T kern/kernel.ld -nostdlib --no-gc-sections --print-gc-sections -Map=vivek.map
+endif
 
 # entry.S must be first, so that it's the first code in the text segment!!!
 #
@@ -48,10 +52,11 @@ KERN_SRCFILES +=	kern/e100.c \
 			kern/pci.c \
 			kern/time.c
 
+ifndef GUEST_KERN
 KERN_SRCFILES +=	vmm/ept.c \
 			vmm/vmx.c \
 			vmm/vmexits.c
-
+endif
 
 # Only build files if they exist.
 KERN_SRCFILES := $(wildcard $(KERN_SRCFILES))
@@ -85,7 +90,9 @@ KERN_BINFILES +=	user/testpteshare \
 			user/testshell
 
 # Binary files for LAB8
+ifndef GUEST_KERN
 KERN_BINFILES +=	user/vmm
+endif
 KERN_OBJFILES := $(patsubst %.c, $(OBJDIR)/%.o, $(KERN_SRCFILES))
 KERN_OBJFILES := $(patsubst %.S, $(OBJDIR)/%.o, $(KERN_OBJFILES))
 KERN_OBJFILES := $(patsubst $(OBJDIR)/lib/%, $(OBJDIR)/kern/%, $(KERN_OBJFILES))
@@ -122,6 +129,15 @@ $(OBJDIR)/vmm/%.o: vmm/%.c $(OBJDIR)/.vars.KERN_CFLAGS
 $(OBJDIR)/kern/init.o: override KERN_CFLAGS+=$(INIT_CFLAGS)
 $(OBJDIR)/kern/init.o: $(OBJDIR)/.vars.INIT_CFLAGS
 
+ifdef GUEST_KERN
+# How to build the kernel itself
+$(OBJDIR)/kern/kernel: $(KERN_OBJFILES) $(KERN_BINFILES) kern/guest_kernel.ld \
+	  $(OBJDIR)/.vars.KERN_LDFLAGS
+	@echo + ld $@
+	$(V)$(LD) -o $@ $(KERN_LDFLAGS) $(KERN_OBJFILES) $(GCC_LIB) -b binary $(KERN_BINFILES)
+	$(V)$(OBJDUMP) -S $@ > $@.asm
+	$(V)$(NM) -n $@ > $@.sym
+else
 # How to build the kernel itself
 $(OBJDIR)/kern/kernel: $(KERN_OBJFILES) $(KERN_BINFILES) kern/kernel.ld \
 	  $(OBJDIR)/.vars.KERN_LDFLAGS
@@ -129,6 +145,7 @@ $(OBJDIR)/kern/kernel: $(KERN_OBJFILES) $(KERN_BINFILES) kern/kernel.ld \
 	$(V)$(LD) -o $@ $(KERN_LDFLAGS) $(KERN_OBJFILES) $(GCC_LIB) -b binary $(KERN_BINFILES)
 	$(V)$(OBJDUMP) -S $@ > $@.asm
 	$(V)$(NM) -n $@ > $@.sym
+endif
 
 ifndef GUEST_KERN
 # How to build the kernel disk image

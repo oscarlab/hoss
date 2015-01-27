@@ -199,6 +199,7 @@ env_setup_vm(struct Env *e)
 	return 0;
 }
 
+#ifndef VMM_GUEST
 int
 env_guest_alloc(struct Env **newenv_store, envid_t parent_id)
 {
@@ -312,6 +313,7 @@ void env_guest_free(struct Env *e) {
 
 	cprintf("[%08x] free vmx guest env %08x\n", curenv ? curenv->env_id : 0, e->env_id);
 }
+#endif
 
 //
 // Allocates and initializes a new environment.
@@ -568,9 +570,11 @@ env_destroy(struct Env *e)
 		return;
 	}
 
+#ifndef VMM_GUEST 
 	if(e->env_type == ENV_TYPE_GUEST) 
 		env_guest_free(e);
 	else
+#endif
 		env_free(e);
 
 	if (curenv == e) {

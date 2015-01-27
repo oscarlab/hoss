@@ -58,7 +58,7 @@ def test_icode():
     r.user_test("icode")
     r.match('icode: read /motd',
             'This is /motd, the message of the day.',
-            'icode: spawn /init',
+            'icode: spawn /sbin/init',
             'init: running',
             'init: data seems okay',
             'icode: exiting',
