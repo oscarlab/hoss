@@ -69,6 +69,7 @@ openfile_alloc(struct OpenFile **o)
 	// Find an available open-file table entry
 	for (i = 0; i < MAXOPEN; i++) {
 		switch (pageref(opentab[i].o_fd)) {
+		#ifndef VMM_GUEST	
 		case 0:
 			if ((r = sys_page_alloc(0, opentab[i].o_fd, PTE_P|PTE_U|PTE_W)) < 0)
 				return r;
@@ -78,6 +79,23 @@ openfile_alloc(struct OpenFile **o)
 			*o = &opentab[i];
 			memset(opentab[i].o_fd, 0, PGSIZE);
 			return (*o)->o_fileid;
+		#else
+		case 0:
+			if ((r = sys_page_alloc(0, opentab[i].o_fd, PTE_P|PTE_U|PTE_W)) < 0)
+				return r;
+			opentab[i].o_fileid += MAXOPEN;
+			*o = &opentab[i];
+			memset(opentab[i].o_fd, 0, PGSIZE);
+			return (*o)->o_fileid;
+			break;
+		case 1:
+			if ((uint64_t) opentab[i].o_fd != get_host_fd()) {				
+				opentab[i].o_fileid += MAXOPEN;
+				*o = &opentab[i];
+				memset(opentab[i].o_fd, 0, PGSIZE);
+				return (*o)->o_fileid;
+			}
+		#endif
 		}
 	}
 	return -E_MAX_OPEN;

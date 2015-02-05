@@ -45,6 +45,8 @@ struct Dev devfile =
 	.dev_read =	devfile_read,
 	.dev_close =	devfile_flush,
 	.dev_stat =	devfile_stat,
+	.dev_write =	devfile_write,
+	.dev_trunc =	devfile_trunc
 };
 
 // Open a file (or directory).
@@ -105,6 +107,21 @@ devfile_read(struct Fd *fd, void *buf, size_t n)
 	panic("devfile_read not implemented");
 }
 
+// Write at most 'n' bytes from 'buf' to 'fd' at the current seek position.
+//
+// Returns:
+//	 The number of bytes successfully written.
+//	 < 0 on error.
+static ssize_t
+devfile_write(struct Fd *fd, const void *buf, size_t n)
+{
+	// Make an FSREQ_WRITE request to the file system server.  Be
+	// careful: fsipcbuf.write.req_buf is only so large, but
+	// remember that write is always allowed to write *fewer*
+	// bytes than requested.
+	// LAB 5: Your code here
+	panic("devfile_write not implemented");
+}
 
 static int
 devfile_stat(struct Fd *fd, struct Stat *st)
@@ -120,4 +137,32 @@ devfile_stat(struct Fd *fd, struct Stat *st)
 	return 0;
 }
 
+// Truncate or extend an open file to 'size' bytes
+static int
+devfile_trunc(struct Fd *fd, off_t newsize)
+{
+	fsipcbuf.set_size.req_fileid = fd->fd_file.id;
+	fsipcbuf.set_size.req_size = newsize;
+	return fsipc(FSREQ_SET_SIZE, NULL);
+}
+
+// Delete a file
+int
+remove(const char *path)
+{
+	if (strlen(path) >= MAXPATHLEN)
+		return -E_BAD_PATH;
+	strcpy(fsipcbuf.remove.req_path, path);
+	return fsipc(FSREQ_REMOVE, NULL);
+}
+
+// Synchronize disk with buffer cache
+int
+sync(void)
+{
+	// Ask the file server to update the disk
+	// by writing any dirty blocks in the buffer cache.
+
+	return fsipc(FSREQ_SYNC, NULL);
+}
 
