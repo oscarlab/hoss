@@ -14,6 +14,7 @@
 #include <kern/cpu.h>
 #include <kern/spinlock.h>
 #include <kern/time.h>
+#include <inc/vmx.h>
 
 extern uintptr_t gdtdesc_64;
 struct Taskstate ts;

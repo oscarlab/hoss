@@ -12,6 +12,7 @@
 #include <inc/string.h>
 #include <kern/syscall.h>
 #include <kern/env.h>
+#include <kern/cpu.h>
 
 
 bool
@@ -25,6 +26,50 @@ find_msr_in_region(uint32_t msr_idx, uintptr_t *area, int area_sz, struct vmx_ms
         }
     }
     return false;
+}
+
+
+bool
+handle_interrupt_window(struct Trapframe *tf, struct VmxGuestInfo *ginfo, uint32_t host_vector) {
+	uint64_t rflags;
+	 uint32_t procbased_ctls_or;
+	
+	procbased_ctls_or = vmcs_read32( VMCS_32BIT_CONTROL_PROCESSOR_BASED_VMEXEC_CONTROLS );
+            
+        //disable the interrupt window exiting
+        procbased_ctls_or &= ~(VMCS_PROC_BASED_VMEXEC_CTL_INTRWINEXIT); 
+        
+        vmcs_write32( VMCS_32BIT_CONTROL_PROCESSOR_BASED_VMEXEC_CONTROLS, 
+            procbased_ctls_or);
+        //write back the host_vector, which can insert a virtual interrupt            
+	vmcs_write32( VMCS_32BIT_CONTROL_VMENTRY_INTERRUPTION_INFO , host_vector);
+	return true;
+}
+bool
+handle_interrupts(struct Trapframe *tf, struct VmxGuestInfo *ginfo, uint32_t host_vector) {
+	uint64_t rflags;
+	uint32_t procbased_ctls_or;
+	rflags = vmcs_read64(VMCS_GUEST_RFLAGS);
+	
+	if ( !(rflags & (0x1 << 9)) ) {	//we have to wait the interrupt window open
+		//get the interrupt info
+		
+		procbased_ctls_or = vmcs_read32( VMCS_32BIT_CONTROL_PROCESSOR_BASED_VMEXEC_CONTROLS);
+            
+		//disable the interrupt window exiting
+		procbased_ctls_or |= VMCS_PROC_BASED_VMEXEC_CTL_INTRWINEXIT; 
+		
+		vmcs_write32( VMCS_32BIT_CONTROL_PROCESSOR_BASED_VMEXEC_CONTROLS, 
+		    procbased_ctls_or);
+	}
+	else {	//revector the host vector to the guest vector
+		
+		vmcs_write32( VMCS_32BIT_CONTROL_VMENTRY_INTERRUPTION_INFO , host_vector);
+	}
+	
+	
+	
+	return true;
 }
 
 bool
@@ -221,6 +266,10 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
 	    cprintf("IPC recv hypercall not implemented\n");	    
             handled = false;
             break;
+        case VMX_VMCALL_LAPICEOI:
+        	lapic_eoi();
+        	handled = true;
+        	break;
     }
     if(handled) {
 	    /* Advance the program counter by the length of the vmcall instruction. 

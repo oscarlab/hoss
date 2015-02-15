@@ -358,6 +358,7 @@ static __inline uint64_t vmcs_read64(uint32_t field)
 #define VMCS_SECONDARY_VMEXEC_CTL_UNRESTRICTED_GUEST  0x80
 
 #define VMCS_VMEXIT_HOST_ADDR_SIZE ( 0x1 << 9 )
+#define VMCS_VMEXIT_GUEST_ACK_INTR_ON_EXIT ( 0x1 << 15 )
 
 #define VMCS_VMENTRY_x64_GUEST ( 0x1 << 9 )
 

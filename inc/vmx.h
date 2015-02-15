@@ -29,6 +29,7 @@ struct VmxGuestInfo {
 #define VMX_VMCALL_MBMAP 0x1
 #define VMX_VMCALL_IPCSEND 0x2
 #define VMX_VMCALL_IPCRECV 0x3
+#define VMX_VMCALL_LAPICEOI 0x4
 
 #define VMX_HOST_FS_ENV 0x1
 

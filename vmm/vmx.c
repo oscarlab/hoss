@@ -267,6 +267,8 @@ vmcs_ctls_init( struct Env* e ) {
     vmx_read_capability_msr( IA32_VMX_PINBASED_CTLS, 
             &pinbased_ctls_and, &pinbased_ctls_or );
 
+	//enable the guest external interrupt exit    
+	pinbased_ctls_or |= VMCS_PIN_BASED_VMEXEC_CTL_EXINTEXIT;
     vmcs_write32( VMCS_32BIT_CONTROL_PIN_BASED_EXEC_CONTROLS, 
             pinbased_ctls_or & pinbased_ctls_and );
 
@@ -306,6 +308,7 @@ vmcs_ctls_init( struct Env* e ) {
             &exit_ctls_and, &exit_ctls_or );
 
     exit_ctls_or |= VMCS_VMEXIT_HOST_ADDR_SIZE;
+    exit_ctls_or |= VMCS_VMEXIT_GUEST_ACK_INTR_ON_EXIT;	
     vmcs_write32( VMCS_32BIT_CONTROL_VMEXIT_CONTROLS, 
             exit_ctls_or & exit_ctls_and );
 
@@ -362,6 +365,7 @@ void vmcs_dump_cpu() {
 void vmexit() {
     int exit_reason = -1;
     bool exit_handled = false;
+    static uint32_t host_vector;
     // Get the reason for VMEXIT from the VMCS.
     // Your code here.
 
@@ -369,6 +373,13 @@ void vmexit() {
     /* vmcs_dump_cpu(); */
  
     switch(exit_reason & EXIT_REASON_MASK) {
+    	case EXIT_REASON_EXTERNAL_INT:
+    		host_vector = vmcs_read32(VMCS_32BIT_VMEXIT_INTERRUPTION_INFO);
+    		exit_handled = handle_interrupts(&curenv->env_tf, &curenv->env_vmxinfo, host_vector);
+    		break;
+    	case EXIT_REASON_INTERRUPT_WINDOW:
+    		exit_handled = handle_interrupt_window(&curenv->env_tf, &curenv->env_vmxinfo, host_vector);
+    		break;
         case EXIT_REASON_RDMSR:
             exit_handled = handle_rdmsr(&curenv->env_tf, &curenv->env_vmxinfo);
             break;
