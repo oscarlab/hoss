@@ -230,7 +230,7 @@ tlbflush(void)
 {
     uint64_t cr3;
     __asm __volatile("movq %%cr3,%0" : "=r" (cr3));
-    __asm __volatile("movl %0,%%cr3" : : "r" (cr3));
+    __asm __volatile("movq %0,%%cr3" : : "r" (cr3));
 }
 
     static __inline uint64_t
