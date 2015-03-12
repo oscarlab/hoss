@@ -16,6 +16,39 @@
 #include <kern/kclock.h>
 #include <kern/console.h>
 
+
+
+void vmx_list_vms() {
+	//findout how many VMs there
+	int i;
+	int vm_count = 0;
+	for (i = 0; i < NENV; ++i) {
+		if (envs[i].env_type == ENV_TYPE_GUEST) {
+			if (vm_count == 0) {
+				cprintf("Running VMs:\n");
+			}
+			vm_count++;
+			cprintf("%d.[%x]vm%d\n", vm_count, envs[i].env_id, vm_count);
+		}
+	}
+}
+
+bool vmx_sel_resume(int num) {
+	int i;
+	int vm_count = 0;
+	for (i = 0; i < NENV; ++i) {
+		if (envs[i].env_type == ENV_TYPE_GUEST) {
+			vm_count++;
+			if (vm_count == num) {
+				cprintf("Resume vm.%d\n", num);	
+				envs[i].env_status = ENV_RUNNABLE;
+				return true;
+			}
+		}
+	}
+	cprintf("Selected VM(No.%d VM) not found.\n", num);	
+	return false;
+}
 /* static uintptr_t *msr_bitmap; */
 
 /* Checks VMX processor support using CPUID.
@@ -369,7 +402,7 @@ void vmexit() {
     // Get the reason for VMEXIT from the VMCS.
     // Your code here.
 
-    /* cprintf( "---VMEXIT Reason: %d---\n", exit_reason ); */
+     //cprintf( "---VMEXIT Reason: %d---\n", exit_reason ); 
     /* vmcs_dump_cpu(); */
  
     switch(exit_reason & EXIT_REASON_MASK) {
@@ -589,6 +622,6 @@ int vmx_vmrun( struct Env *e ) {
     vmcs_write64( VMCS_GUEST_RSP, curenv->env_tf.tf_rsp  );
     vmcs_write64( VMCS_GUEST_RIP, curenv->env_tf.tf_rip );
     panic ("asm vmrun incomplete\n");
-    asm_vmrun( &e->env_tf );
+    asm_vmrun( &e->env_tf );    
     return 0;
 }

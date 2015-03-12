@@ -10,11 +10,22 @@
 #include <kern/kclock.h>
 #include <kern/multiboot.h>
 #include <inc/string.h>
+#include <inc/stdio.h>
 #include <kern/syscall.h>
 #include <kern/env.h>
 #include <kern/cpu.h>
 
 
+static int vmdisk_number = 0;	//this number assign to the vm
+int 
+vmx_get_vmdisk_number() {
+	return vmdisk_number;
+}
+
+void
+vmx_incr_vmdisk_number() {
+	vmdisk_number++;
+}
 bool
 find_msr_in_region(uint32_t msr_idx, uintptr_t *area, int area_sz, struct vmx_msr_entry **msr_entry) {
     struct vmx_msr_entry *entry = (struct vmx_msr_entry *)area;
@@ -229,10 +240,8 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
     void *gpa_pg, *hva_pg;
     envid_t to_env;
     uint32_t val;
-
     // phys address of the multiboot map in the guest.
     uint64_t multiboot_map_addr = 0x6000;
-
     switch(tf->tf_regs.reg_rax) {
         case VMX_VMCALL_MBMAP:
             // Craft a multiboot (e820) memory map for the guest.
@@ -268,6 +277,16 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
             break;
         case VMX_VMCALL_LAPICEOI:
         	lapic_eoi();
+        	handled = true;
+        	break;
+        case VMX_VMCALL_BACKTOHOST:
+        	cprintf("Now back to the host, VM halt in the background, run vmmanager to resume the VM.\n");
+        	curenv->env_status = ENV_NOT_RUNNABLE;	//mark the guest not runable
+        	ENV_CREATE(user_sh, ENV_TYPE_USER);	//create a new host shell
+        	handled = true;
+        	break;	
+        case VMX_VMCALL_GETDISKIMGNUM:	//alloc a number to guest
+        	tf->tf_regs.reg_rax = vmdisk_number;
         	handled = true;
         	break;
     }

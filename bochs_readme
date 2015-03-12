@@ -1,0 +1,9 @@
+To successfully debug the lab8, we have to rebuild the bochs with gdb stubs support. We can download bochs source code from http://sourceforge.net/projects/bochs/files/bochs/2.6.7/
+
+After downloading and decompressing the bochs-2.6.7.tar.gz, we have to do some configuration to enable needed features of bochs with the following command:
+
+./configure --enable-x86-64 --enable-vmx=2 --enable-gdb-stub --enable-pci --enable-e1000 --enable-fpu --with-all-libs --prefix=/usr
+
+Then we can make the bochs. Errors in the make process are mainly caused by missing some supporting libraries in your system. Installing build-essentials, g++, libgtk2.0-dev, libxrandr-dev, and xorg-dev may help.
+
+When make finished, you can install following command to install the bochs: sudo make install

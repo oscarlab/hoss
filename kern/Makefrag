@@ -55,7 +55,7 @@ KERN_SRCFILES +=	kern/e100.c \
 ifndef GUEST_KERN
 KERN_SRCFILES +=	vmm/ept.c \
 			vmm/vmx.c \
-			vmm/vmexits.c
+			vmm/vmexits.c 
 endif
 
 # Only build files if they exist.
@@ -91,7 +91,8 @@ KERN_BINFILES +=	user/testpteshare \
 
 # Binary files for LAB8
 ifndef GUEST_KERN
-KERN_BINFILES +=	user/vmm
+KERN_BINFILES +=	user/vmm \
+			user/sh 
 endif
 KERN_OBJFILES := $(patsubst %.c, $(OBJDIR)/%.o, $(KERN_SRCFILES))
 KERN_OBJFILES := $(patsubst %.S, $(OBJDIR)/%.o, $(KERN_OBJFILES))

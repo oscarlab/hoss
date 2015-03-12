@@ -76,10 +76,13 @@ void
 host_ipc_init()
 {
 	int r;
+	int vmdisk_number;
+	char path_string[50];
 	if ((r = fd_alloc(&host_fd)) < 0)
 		panic("Couldn't allocate an fd!");
-
-	strcpy(host_fsipcbuf.open.req_path, HOST_FS_FILE);
+	asm("vmcall":"=a"(vmdisk_number): "0"(VMX_VMCALL_GETDISKIMGNUM));
+	snprintf(path_string, 50, "/vmm/fs%d.img", vmdisk_number);
+	strcpy(host_fsipcbuf.open.req_path, path_string);
 	host_fsipcbuf.open.req_omode = O_RDWR;
 
 	if ((r = host_fsipc(FSREQ_OPEN, host_fd)) < 0) {

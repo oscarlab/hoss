@@ -69,7 +69,7 @@ totalscore=0
 
 # Testcase 1: EPT extension support foolproof check
 	echo "EPT support foolproof check: "
-	pts=20
+	pts=10
 	totalscore=`expr $totalscore + $pts`
 	BOCHS_OPTIONS="display_library:nogui cpuid:vmx=1"
 	MAKE_OPTIONS="DEFS='-DTEST=user_vmm'"
@@ -84,8 +84,25 @@ totalscore=0
 	else
 		echo -e "\tFailed: 0 points"
 	fi
+# Testcase 2: VMX extension support foolproof check
+	echo "VMX support foolproof check: "
+	pts=10
+	totalscore=`expr $totalscore + $pts`
+	BOCHS_OPTIONS="display_library:nogui cpuid:vmx=0"
+	MAKE_OPTIONS="DEFS='-DTEST=user_vmm'"
+	runtest
+	BOCHS_OPTIONS=
+	MAKE_OPTIONS=
 
-# Testcase 2: sys_ept_map() & related functionality testcase
+	if grep "\[VMM\] VMX extension not supported\." bochs.out >/dev/null
+	then
+		score=`expr $score + $pts`
+		echo -e "\tSuccess: $pts points"
+	else
+		echo -e "\tFailed: 0 points"
+	fi
+	
+# Testcase 3: sys_ept_map() & related functionality testcase
 	echo "EPT related functionality check: "
 	pts=40
 	totalscore=`expr $totalscore + $pts`
@@ -103,7 +120,7 @@ totalscore=0
 		echo -e "\tFailed: 0 points"
 	fi
 
-# Testcase 3: guest vmx exposure testcase
+# Testcase 4: guest vmx exposure testcase
 	echo "Guest VMX exposure check: "
 	pts=20
 	totalscore=`expr $totalscore + $pts`

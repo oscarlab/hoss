@@ -309,6 +309,26 @@ sys_time_msec(void)
 //       env_pml4e to store the root of the extended page tables.
 // 
 #ifndef VMM_GUEST
+static void
+sys_vmx_list_vms() {
+	vmx_list_vms();
+}
+
+static bool
+sys_vmx_sel_resume(int i) {
+	return vmx_sel_resume(i);
+}
+
+static int
+sys_vmx_get_vmdisk_number() {
+	return vmx_get_vmdisk_number();
+}
+
+static void
+sys_vmx_incr_vmdisk_number() {
+	vmx_incr_vmdisk_number();
+}
+
 static int
 sys_ept_map(envid_t srcenvid, void *srcva,
 	    envid_t guest, void* guest_pa, int perm)
@@ -355,6 +375,16 @@ syscall(uint64_t syscallno, uint64_t a1, uint64_t a2, uint64_t a3, uint64_t a4, 
 		return sys_ept_map(a1, (void*) a2, a3, (void*) a4, a5);
 	case SYS_env_mkguest:
 		return sys_env_mkguest(a1, a2);
+	case SYS_vmx_list_vms:
+		sys_vmx_list_vms();
+		return 0;
+	case SYS_vmx_sel_resume:
+		return sys_vmx_sel_resume(a1);
+	case SYS_vmx_get_vmdisk_number:
+		return sys_vmx_get_vmdisk_number();
+	case SYS_vmx_incr_vmdisk_number:
+		sys_vmx_incr_vmdisk_number();
+		return 0;
 #endif
 		
 	default:

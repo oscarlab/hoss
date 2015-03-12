@@ -27,8 +27,12 @@ struct vmx_msr_entry {
 
 inline bool vmx_check_ept();
 inline bool vmx_check_support();
+int vmx_get_vmdisk_number();
+void vmx_incr_vmdisk_number();
 int vmx_init_vmxon();
 int vmx_vmrun( struct Env *e );
+void vmx_list_vms();
+bool vmx_sel_resume(int num);
 struct PageInfo * vmx_init_vmcs();
 
 /* VMX Capalibility MSRs */

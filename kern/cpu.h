@@ -7,8 +7,7 @@
 #include <inc/mmu.h>
 #include <inc/env.h>
 
-// Disable SMP for bochs (JOS's SMP detection code breaks on bochs).
-#define NCPU  1
+#define NCPU  4
 
 
 

@@ -63,6 +63,12 @@ int	sys_ipc_recv(void *rcv_pg);
 unsigned int sys_time_msec(void);
 int sys_ept_map(envid_t srcenvid, void *srcva, envid_t guest, void* guest_pa, int perm);
 envid_t sys_env_mkguest(uint64_t gphysz, uint64_t gRIP);
+#ifndef VMM_GUEST
+void	sys_vmx_list_vms();
+int	sys_vmx_sel_resume(int i);
+int	sys_vmx_get_vmdisk_number();
+void	sys_vmx_incr_vmdisk_number();
+#endif
 
 // This must be inlined.  Exercise for reader: why?
 static __inline envid_t __attribute__((always_inline))
@@ -108,6 +114,8 @@ int	open(const char *path, int mode);
 int	ftruncate(int fd, off_t size);
 int	remove(const char *path);
 int	sync(void);
+int	copy(char *src, char *dest);
+
 
 // pageref.c
 int	pageref(void *addr);

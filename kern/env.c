@@ -493,6 +493,13 @@ env_free(struct Env *e)
 	uint64_t pdeno, pteno;
 	physaddr_t pa;
 
+#ifndef VMM_GUEST 
+	if(e->env_type == ENV_TYPE_GUEST) {
+		env_guest_free(e);
+		return;
+	}
+#endif
+
 	// If freeing the current environment, switch to kern_pgdir
 	// before freeing the page directory, just in case the page
 	// gets reused.
@@ -570,13 +577,7 @@ env_destroy(struct Env *e)
 		return;
 	}
 
-#ifndef VMM_GUEST 
-	if(e->env_type == ENV_TYPE_GUEST) 
-		env_guest_free(e);
-	else
-#endif
-		env_free(e);
-
+	env_free(e);
 	if (curenv == e) {
 		curenv = NULL;
 		sched_yield();
