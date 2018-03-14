@@ -40,7 +40,15 @@ def test_backtrace_symbols():
 def test_backtrace_lines():
     matches = re.findall(r"([^ ]*init.c:([0-9]+):) +test_backtrace\+", r.qemu.output)
     assert matches, "No line numbers"
-    if any(int(m[1]) < 5 or int(m[1]) > 50 for m in matches):
+    code = open('kern/init.c').read().split('\n');
+    begin = 0
+    end = 0
+    for i in range(len(code)):
+        if code[i].startswith('test_backtrace('):
+		begin = i + 2
+	if begin > 0 and code[i].startswith('}'):
+		end = i
+    if any(int(m[1]) < begin or int(m[1]) > end for m in matches):
         assert_equal("\n".join(m[0] for m in matches),
                      "Line numbers between 5 and 50")
 

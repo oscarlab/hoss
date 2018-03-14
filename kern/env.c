@@ -19,6 +19,9 @@
 #include <vmm/vmx.h>
 #include <vmm/ept.h>
 
+extern bool bootstrapped;
+int vcpu_count = 0;
+
 struct Env *envs = NULL;		// All environments
 static struct Env *env_free_list;	// Free environment list
 // (linked by Env->env_link)
@@ -170,7 +173,7 @@ env_setup_vm(struct Env *e)
 	struct PageInfo *p = NULL;
 
 	// Allocate a page for the page directory
-	if (!(p = page_alloc(0)))
+	if (!(p = page_alloc(ALLOC_ZERO)))
 		return -E_NO_MEM;
 
 	// Now, set e->env_pml4e and initialize the page directory.
@@ -275,6 +278,8 @@ env_guest_alloc(struct Env **newenv_store, envid_t parent_id)
 	e->env_type = ENV_TYPE_GUEST;
 	e->env_status = ENV_RUNNABLE;
 	e->env_runs = 0;
+	e->env_vmxinfo.vcpunum = vcpu_count++;
+    	cprintf("VCPUNUM allocated: %d\n", e->env_vmxinfo.vcpunum);
 
 	memset(&e->env_tf, 0, sizeof(e->env_tf));
 

@@ -11,7 +11,8 @@
 
 .set multiboot_info, 0x7000 // After the boot block
 .set e820_map, multiboot_info + 52
-
+.set e820_map4, multiboot_info + 56
+	
 .set MB_flag, multiboot_info
 .set MB_mmap_len, multiboot_info + 44
 .set MB_mmap_addr, multiboot_info + 48
@@ -52,9 +53,7 @@ seta20.2:
   # get the E820 memory map from the BIOS
 do_e820:
   movl $0xe820, %eax
-  movl $e820_map, %ebx
-  movl %ebx, %edi
-  addl $4, %edi
+  movl $e820_map4, %edi
   xorl %ebx, %ebx
   movl $0x534D4150, %edx
   movl $24, %ecx
@@ -76,8 +75,7 @@ next_entry:
   jc done
   addl $24, %ebp
   testl %ebx, %ebx
-  je done
-  jmp next_entry
+  jne next_entry
 
 done:
   movl %ecx, -4(%edi)

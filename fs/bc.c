@@ -26,6 +26,7 @@ va_is_dirty(void *va)
 
 // Fault any disk block that is read in to memory by
 // loading it from disk.
+// Hint: Use ide_read and BLKSECTS.
 static void
 bc_pgfault(struct UTrapframe *utf)
 {
@@ -47,6 +48,21 @@ bc_pgfault(struct UTrapframe *utf)
 	// Hint: first round addr to page boundary.
 	//
 	// LAB 5: your code here:
+
+
+#ifndef VMM_GUEST
+
+	// LAB 5: Your code here
+
+#else  // VMM GUEST
+
+	/* Your code here */
+	panic("Host read not implemented!\n");
+#endif // VMM_GUEST
+
+
+	if ((r = sys_page_map(0, addr, 0, addr, uvpt[PGNUM(addr)] & PTE_SYSCALL)) < 0)
+		panic("in bc_pgfault, sys_page_map: %e", r);
 
 	// Check that the block we read was allocated. (exercise for
 	// the reader: why do we do this *after* reading the block
@@ -109,6 +125,7 @@ bc_init(void)
 {
 	struct Super super;
 	set_pgfault_handler(bc_pgfault);
+	check_bc();
 
 	// cache the super block by reading it once
 	memmove(&super, diskaddr(1), sizeof super);

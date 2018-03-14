@@ -313,18 +313,12 @@ x64_vm_init(void)
 	// Initialize the SMP-related parts of the memory map
 	mem_init_mp();
 
-	/* check_boot_pml4e(boot_pml4e); */
 
 	//////////////////////////////////////////////////////////////////////
 	// Permissions: kernel RW, user NONE
 	pdpe_t *pdpe = KADDR(PTE_ADDR(pml4e[1]));
 	pde_t *pgdir = KADDR(PTE_ADDR(pdpe[0]));
 	lcr3(boot_cr3);
-
-	/* check_page_free_list(1); */
-	/* check_page_alloc(); */
-	/* page_check(); */
-	/* check_page_free_list(0); */
 }
 
 
@@ -1077,13 +1071,14 @@ page_check(void)
 #endif
 
 	// forcibly take pp3 back
-	assert(PTE_ADDR(boot_pml4e[0]) == page2pa(pp3));
+	struct PageInfo *pp_l1 = pa2page(PTE_ADDR(boot_pml4e[0]));
 	boot_pml4e[0] = 0;
 	assert(pp3->pp_ref == 1);
-	page_decref(pp3);
+	page_decref(pp_l1);
 	// check pointer arithmetic in pml4e_walk
-	page_decref(pp0);
-	page_decref(pp2);
+	if (pp_l1 != pp3) page_decref(pp3);
+	if (pp_l1 != pp2) page_decref(pp2);
+	if (pp_l1 != pp0) page_decref(pp0);
 	va = (void*)(PGSIZE * 100);
 	ptep = pml4e_walk(boot_pml4e, va, 1);
 	pdpe = KADDR(PTE_ADDR(boot_pml4e[PML4(va)]));
@@ -1092,7 +1087,6 @@ page_check(void)
 	assert(ptep == ptep1 + PTX(va));
 
 	// check that new page tables get cleared
-	page_decref(pp4);
 	memset(page2kva(pp4), 0xFF, PGSIZE);
 	pml4e_walk(boot_pml4e, 0x0, 1);
 	pdpe = KADDR(PTE_ADDR(boot_pml4e[0]));
@@ -1107,8 +1101,16 @@ page_check(void)
 
 	// free the pages we took
 	page_decref(pp0);
-	page_decref(pp1);
 	page_decref(pp2);
+	page_decref(pp3);
+
+	// Triple check that we got the ref counts right
+	assert(pp0->pp_ref == 0);
+	assert(pp1->pp_ref == 0);
+	assert(pp2->pp_ref == 0);
+	assert(pp3->pp_ref == 0);
+	assert(pp4->pp_ref == 0);
+	assert(pp5->pp_ref == 0);
 
 	// test mmio_map_region
 	mm1 = (uintptr_t) mmio_map_region(0, 4097);

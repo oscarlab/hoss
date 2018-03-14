@@ -245,7 +245,7 @@ def mk_test_httpd(url, expect_code, expect_data):
     test_httpd_test.__name__ += url.replace("/", "-")
     return test(10, fullurl, parent=test_httpd)(test_httpd_test)
 mk_test_httpd("/", 404, "")
-mk_test_httpd("/index.html", 200, open("fs/index.html").read())
+mk_test_httpd("/index.html", 200, re.sub(r'(?m)^\#.*\n?', '', open("fs/index.html").read()))
 mk_test_httpd("/random_file.txt", 404, "")
 
 end_part("B")

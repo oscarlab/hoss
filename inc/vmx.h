@@ -7,18 +7,19 @@
 #ifndef __ASSEMBLER__
 
 struct VmxGuestInfo {
-    uint64_t phys_sz;
-    uintptr_t *vmcs;
+	int64_t phys_sz;
+	uintptr_t *vmcs;
 
-    // Exception bitmap.
-    uint32_t exception_bmap;
-    // I/O bitmap.
-    uint64_t *io_bmap_a;
-    uint64_t *io_bmap_b;
-    // MSR load/store area.
-    int msr_count;
-    uintptr_t *msr_host_area;
-    uintptr_t *msr_guest_area;
+	// Exception bitmap.
+	uint32_t exception_bmap;
+	// I/O bitmap.
+	uint64_t *io_bmap_a;
+	uint64_t *io_bmap_b;
+	// MSR load/store area.
+	int msr_count;
+	uintptr_t *msr_host_area;
+	uintptr_t *msr_guest_area;
+	int vcpunum;
 };
 
 #endif
@@ -32,6 +33,9 @@ struct VmxGuestInfo {
 #define VMX_VMCALL_LAPICEOI 0x4
 #define VMX_VMCALL_BACKTOHOST 0x5
 #define VMX_VMCALL_GETDISKIMGNUM 0x6
+#define VMX_VMCALL_ALLOC_CPU 0x7
+#define VMX_VMCALL_GUEST_YIELD 0x8
+#define VMX_VMCALL_CPUNUM 0x9
 
 #define VMX_HOST_FS_ENV 0x1
 

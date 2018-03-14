@@ -1,3 +1,7 @@
+#include <inc/types.h>
+#include <inc/assert.h>
+#include <inc/error.h>
+
 /* See COPYRIGHT for copyright information. */
 
 #include <inc/x86.h>
@@ -239,6 +243,11 @@ sys_page_unmap(envid_t envid, void *va)
 // then no page mapping is transferred, but no error occurs.
 // The ipc only happens when no errors occur.
 //
+// When the environment is a guest (Lab 8, aka the VMM assignment only),
+// srcva should be assumed to be converted to a host virtual address (in
+// the kernel address range).  You will need to add a special case to allow
+// accesses from ENV_TYPE_GUEST when srcva > UTOP.
+//
 // Returns 0 on success, < 0 on error.
 // Errors are:
 //	-E_BAD_ENV if environment envid doesn't currently exist.
@@ -290,24 +299,6 @@ sys_time_msec(void)
 }
 
 
-// Maps a page from the evnironment corresponding to envid into the guest vm 
-// environments phys addr space. 
-//
-//
-// Return 0 on success, < 0 on error.  Errors are:
-//	-E_BAD_ENV if srcenvid and/or guest doesn't currently exist,
-//		or the caller doesn't have permission to change one of them.
-//	-E_INVAL if srcva >= UTOP or srcva is not page-aligned,
-//		or guest_pa >= guest physical size or guest_pa is not page-aligned.
-//	-E_INVAL is srcva is not mapped in srcenvid's address space.
-//	-E_INVAL if perm is inappropriate 
-//	-E_INVAL if (perm & PTE_W), but srcva is read-only in srcenvid's
-//		address space.
-//	-E_NO_MEM if there's no memory to allocate any necessary page tables. 
-//
-// Hint: The TA solution uses ept_map_hva2gpa().  A guest environment uses 
-//       env_pml4e to store the root of the extended page tables.
-// 
 #ifndef VMM_GUEST
 static void
 sys_vmx_list_vms() {
@@ -329,6 +320,25 @@ sys_vmx_incr_vmdisk_number() {
 	vmx_incr_vmdisk_number();
 }
 
+// Maps a page from the evnironment corresponding to envid into the guest vm 
+// environments phys addr space.  Assuming the mapping is successful, this should
+// also increment the reference count of the mapped page.
+//
+//
+// Return 0 on success, < 0 on error.  Errors are:
+//	-E_BAD_ENV if srcenvid and/or guest doesn't currently exist,
+//		or the caller doesn't have permission to change one of them.
+//	-E_INVAL if srcva >= UTOP or srcva is not page-aligned,
+//		or guest_pa >= guest physical size or guest_pa is not page-aligned.
+//	-E_INVAL is srcva is not mapped in srcenvid's address space.
+//	-E_INVAL if perm is inappropriate 
+//	-E_INVAL if (perm & PTE_W), but srcva is read-only in srcenvid's
+//		address space.
+//	-E_NO_MEM if there's no memory to allocate any necessary page tables. 
+//
+// Hint: The TA solution uses ept_map_hva2gpa().  A guest environment uses 
+//       env_pml4e to store the root of the extended page tables.
+// 
 static int
 sys_ept_map(envid_t srcenvid, void *srcva,
 	    envid_t guest, void* guest_pa, int perm)
@@ -400,4 +410,3 @@ _export_sys_ept_map(envid_t srcenvid, void *srcva,
 	return sys_ept_map(srcenvid, srcva, guest, guest_pa, perm);
 }
 #endif
-

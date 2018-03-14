@@ -78,7 +78,7 @@ ide_read(uint32_t secno, void *dst, size_t nsecs)
 	for (; nsecs > 0; nsecs--, dst += SECTSIZE) {
 		if ((r = ide_wait_ready(1)) < 0)
 			return r;
-		insl(0x1F0, dst, SECTSIZE/4);
+		insw(0x1F0, dst, SECTSIZE/2);
 	}
 
 	return 0;
@@ -103,7 +103,7 @@ ide_write(uint32_t secno, const void *src, size_t nsecs)
 	for (; nsecs > 0; nsecs--, src += SECTSIZE) {
 		if ((r = ide_wait_ready(1)) < 0)
 			return r;
-		outsl(0x1F0, src, SECTSIZE/4);
+		outsw(0x1F0, src, SECTSIZE/2);
 	}
 
 	return 0;

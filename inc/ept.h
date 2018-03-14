@@ -11,11 +11,11 @@
 #define __EPTE_TYPE(n)	(((n) & 0x7) << 3)
 
 enum {
-    EPTE_TYPE_UC = 0, /* uncachable */
-    EPTE_TYPE_WC = 1, /* write combining */
-    EPTE_TYPE_WT = 4, /* write through */
-    EPTE_TYPE_WP = 5, /* write protected */
-    EPTE_TYPE_WB = 6, /* write back */
+	 EPTE_TYPE_UC = 0, /* uncachable */
+	 EPTE_TYPE_WC = 1, /* write combining */
+	 EPTE_TYPE_WT = 4, /* write through */
+	 EPTE_TYPE_WP = 5, /* write protected */
+	 EPTE_TYPE_WB = 6, /* write back */
 };
 
 #define __EPTE_NONE	0

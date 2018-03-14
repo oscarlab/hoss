@@ -21,7 +21,7 @@ host_fsipc(unsigned type, void *dstva)
 
 
 uint64_t
-get_host_fd() 
+get_host_fd()
 {
 	return (uint64_t) host_fd;
 }
@@ -55,7 +55,7 @@ int
 host_write(uint32_t secno, const void *src, size_t nsecs)
 {
 	int r, written = 0;
-    
+
 	if(host_fd->fd_file.id == 0) {
 		host_ipc_init();
 	}

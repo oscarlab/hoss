@@ -63,7 +63,12 @@ start32:
 	movw    %ax, %fs
 	movw    %ax, %gs
 
+#ifndef VMM_GUEST
 	movl $CR4_PAE,%eax
+#else
+	movl $(CR4_PAE|CR4_VMXE),%eax
+#endif
+
 	movl %eax,%cr4
 	
 	lgdt    MPBOOTPHYS(gdtdesc)

@@ -14,4 +14,7 @@ $(OBJDIR)/user/%: $(OBJDIR)/user/%.o $(OBJDIR)/lib/entry.o $(USERLIBS:%=$(OBJDIR
 	$(V)$(OBJDUMP) -S $@.debug > $@.asm
 	$(V)$(NM) -n $@.debug > $@.sym
 	$(V)$(OBJCOPY) --add-gnu-debuglink=$(basename $@.debug) $@.debug $@
+	$(V)$(LD) -o $@ $(ULDFLAGS) $(LDFLAGS) -nostdlib $(OBJDIR)/lib/entry.o $@.o -L$(OBJDIR)/lib $(USERLIBS:%=-l%) $(GCC_LIB)
+	$(V)$(OBJDUMP) -S $@ > $@.asm
+	$(V)$(NM) -n $@ > $@.sym
 

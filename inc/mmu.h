@@ -111,12 +111,12 @@
 #define CR4_TSD		0x00000004	// Time Stamp Disable
 #define CR4_PVI		0x00000002	// Protected-Mode Virtual Interrupts
 #define CR4_VME		0x00000001	// V86 Mode Extensions
-#define CR4_VMXE    0x00002000  // VMX 
+#define CR4_VMXE	0x00002000	// VMX 
 
-//x86_64 related changes
-#define CR4_PAE     0x00000020
-#define EFER_MSR    0xC0000080
-#define EFER_LME    8
+// x86_64 related flags
+#define CR4_PAE		0x00000020
+#define EFER_MSR	0xC0000080
+#define EFER_LME	8
 
 // Eflags register
 #define FL_CF		0x00000001	// Carry Flag

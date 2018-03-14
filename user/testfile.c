@@ -71,6 +71,8 @@ umain(int argc, char **argv)
 	if ((r = xopen("/new-file", O_RDWR|O_CREAT)) < 0)
 		panic("serve_open /new-file: %e", r);
 
+	cprintf("xopen new file worked devfile %p, dev_write %p, msg %p, FVA %p\n", devfile, devfile.dev_write, msg, FVA);
+
 	if ((r = devfile.dev_write(FVA, msg, strlen(msg))) != strlen(msg))
 		panic("file_write: %e", r);
 	cprintf("file_write is good\n");

@@ -47,10 +47,6 @@ int64_t
 _dwarf_decode_sleb128(uint8_t **dp);
 int  _dwarf_find_section_enhanced(Dwarf_Section *ds);
 
-
-
-
-
 static int
 _dwarf_lineno_run_program(Dwarf_CU *cu, Dwarf_LineInfo li, uint8_t *p,
 			  uint8_t *pe, Dwarf_Addr pc, Dwarf_Error *error)
@@ -367,22 +363,6 @@ _dwarf_lineno_init(Dwarf_Die *die, uint64_t offset, Dwarf_LineInfo linfo, Dwarf_
 		DWARF_SET_ERROR(dbg, error, ret);
 		goto fail_cleanup;
 	}
-/*
-  if ((li->li_incdirs = malloc(length * sizeof(char *))) == NULL) {
-  ret = DW_DLE_MEMORY;
-  DWARF_SET_ERROR(dbg, error, ret);
-  goto fail_cleanup;
-  }
-
-  //Fill in include dir array. 
-  i = 0;
-  p = ds->ds_data + offset;
-  while (*p != '\0') {
-  li->li_incdirs[i++] = (char *) p;
-  while (*p++ != '\0')
-  ;
-  }
-*/
 	p++;
 
 	/*

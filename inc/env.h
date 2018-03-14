@@ -46,6 +46,7 @@ enum EnvType {
 	ENV_TYPE_FS,		// File system server
 	ENV_TYPE_NS,		// Network server
 	ENV_TYPE_GUEST,     // A VMM guest OS
+	ENV_TYPE_IDLE,
 };
 
 struct Env {

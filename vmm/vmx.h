@@ -25,8 +25,8 @@ struct vmx_msr_entry {
     uint64_t msr_value;
 } __attribute__((__packed__));
 
-inline bool vmx_check_ept();
-inline bool vmx_check_support();
+bool vmx_check_ept();
+bool vmx_check_support();
 int vmx_get_vmdisk_number();
 void vmx_incr_vmdisk_number();
 int vmx_init_vmxon();

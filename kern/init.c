@@ -27,6 +27,21 @@ uint64_t end_debug;
 
 static void boot_aps(void);
 
+extern unsigned char mpentry_start[], mpentry_end[];
+
+#ifdef VMM_GUEST
+
+static void boot_virtual_aps(void);
+
+int64_t vmcall(int num, int check, uint64_t a1, uint64_t a2, uint64_t a3, uint64_t a4, uint64_t a5)
+{
+    int64_t ret;
+    asm volatile("vmcall\n" : "=a" (ret) : "a" (num), "d" (a1), "c" (a2), "b" (a3), "D" (a4), "S" (a5) : "cc", "memory");
+    if(check && ret > 0) panic("vmcall %d returned %d (> 0)", num, ret);
+    return ret;
+}
+#endif
+
 
 void
 i386_init(void)
@@ -60,7 +75,7 @@ i386_init(void)
 
 #ifndef VMM_GUEST
 	extern char end[];
-	end_debug = read_section_headers((0x10000+KERNBASE), (uintptr_t)end); 
+	end_debug = read_section_headers((0x10000+KERNBASE), (uintptr_t)end);
 #endif
 
 	// Lab 2 memory management initialization functions
@@ -78,10 +93,11 @@ i386_init(void)
 
 	// Lab 4 multitasking initialization functions
 	pic_init();
-
+#ifndef VMM_GUEST  // Does not work in guest mode
 	// Lab 6 hardware initialization functions
 	time_init();
 	pci_init();
+#endif 
 
 	// Acquire the big kernel lock before waking up APs
 	// Your code here:
@@ -90,6 +106,9 @@ i386_init(void)
 	// Starting non-boot CPUs
 	boot_aps();
 #endif
+
+
+
 
 	// Start fs.
 	ENV_CREATE(fs_fs, ENV_TYPE_FS);
@@ -166,6 +185,7 @@ mp_main(void)
 	// Remove this after you finish Exercise 4
 	for (;;);
 }
+
 
 /*
  * Variable panicstr contains argument to first call to panic; used as flag

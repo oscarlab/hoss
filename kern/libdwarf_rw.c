@@ -42,8 +42,6 @@ void _dwarf_frame_params_init(Dwarf_Debug dbg);
 Dwarf_Section *
 _dwarf_find_section(const char *name);
 
-int  _dwarf_find_section_enhanced(Dwarf_Section *ds);
-
 uint64_t
 _dwarf_read_lsb(uint8_t *data, uint64_t *offsetp, int bytes_to_read)
 {
@@ -822,6 +820,5 @@ int  _dwarf_find_section_enhanced(Dwarf_Section *ds)
 	ds->ds_addr = secthdr->ds_addr;
 	ds->ds_size = secthdr->ds_size;
 	return 0;
-
 }
 

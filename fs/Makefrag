@@ -5,8 +5,8 @@ FSOFILES := 		$(OBJDIR)/fs/ide.o \
 			$(OBJDIR)/fs/bc.o \
 			$(OBJDIR)/fs/fs.o \
 			$(OBJDIR)/fs/serv.o \
-			$(OBJDIR)/fs/test.o \
-			$(OBJDIR)/fs/vmx_host.o \
+			$(OBJDIR)/fs/test.o 
+FSOFILES += 		$(OBJDIR)/fs/vmx_host.o
 
 ROOTAPPS := $(OBJDIR)/user/init
 
@@ -15,8 +15,6 @@ FSIMGTXTFILES :=	fs/newmotd \
 
 ifdef GUEST_KERN
 FSIMGTXTFILES +=	fs/motd_guest
-else
-FSIMGTXTFILES +=	fs/robig
 endif
 
 FSIMGTXTFILES :=	$(FSIMGTXTFILES) \
@@ -33,6 +31,7 @@ USERAPPS :=		$(USERAPPS) \
 			$(OBJDIR)/user/primespipe \
 			$(OBJDIR)/user/sh \
 			$(OBJDIR)/user/testfdsharing \
+			$(OBJDIR)/user/testfile \
 			$(OBJDIR)/user/testkbd \
 			$(OBJDIR)/user/testpipe \
 			$(OBJDIR)/user/testpteshare \

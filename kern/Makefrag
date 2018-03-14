@@ -8,10 +8,13 @@
 OBJDIRS += kern
 
 ifdef GUEST_KERN
-KERN_LDFLAGS := $(LDFLAGS) -T kern/guest_kernel.ld -nostdlib --no-gc-sections --print-gc-sections -Map=vivek.map
+KERN_LDFLAGS := $(LDFLAGS) -T kern/guest_kernel.ld 
 else
-KERN_LDFLAGS := $(LDFLAGS) -T kern/kernel.ld -nostdlib --no-gc-sections --print-gc-sections -Map=vivek.map
+KERN_LDFLAGS := $(LDFLAGS) -T kern/kernel.ld 
 endif
+
+KERN_LDFLAGS += -nostdlib --no-gc-sections --print-gc-sections -Map=vivek.map
+
 
 # entry.S must be first, so that it's the first code in the text segment!!!
 #
@@ -38,6 +41,7 @@ KERN_SRCFILES :=	kern/entry.S \
 			kern/libdwarf_rw.c \
 			kern/libdwarf_frame.c \
 			kern/libdwarf_lineno.c \
+			kern/libdwarf_loc.c \
 			kern/elf_rw.c
 
 # Source files for LAB4
@@ -47,8 +51,7 @@ KERN_SRCFILES +=	kern/mpentry.S \
 			kern/spinlock.c
 
 # Source files for LAB6
-KERN_SRCFILES +=	kern/e100.c \
-			kern/e1000.c \
+KERN_SRCFILES +=	kern/e1000.c \
 			kern/pci.c \
 			kern/time.c
 
@@ -65,7 +68,8 @@ KERN_SRCFILES := $(wildcard $(KERN_SRCFILES))
 KERN_BINFILES :=	user/hello
 KERN_BINFILES += user/idle
 # Binary files for LAB5
-KERN_BINFILES +=	user/testfilero \
+KERN_BINFILES +=	user/testfile \
+			user/writemotd \
 			user/spawnhello \
 			user/icode \
 			fs/fs
@@ -89,8 +93,8 @@ KERN_BINFILES +=	user/testpteshare \
 			user/testkbd \
 			user/testshell
 
-# Binary files for LAB8
 ifndef GUEST_KERN
+# Binary files for LAB8
 KERN_BINFILES +=	user/vmm \
 			user/sh 
 endif
@@ -116,12 +120,12 @@ $(OBJDIR)/vmm/%.o: vmm/%.S $(OBJDIR)/.vars.KERN_CFLAGS
 	@mkdir -p $(@D)
 	$(V)$(CC) -nostdinc $(KERN_CFLAGS) -c -o $@ $<
 
-$(OBJDIR)/kern/%.o: lib/%.c $(OBJDIR)/.vars.KERN_CFLAGS
+$(OBJDIR)/vmm/%.o: vmm/%.c $(OBJDIR)/.vars.KERN_CFLAGS
 	@echo + cc $<
 	@mkdir -p $(@D)
 	$(V)$(CC) -nostdinc $(KERN_CFLAGS) -c -o $@ $<
-	
-$(OBJDIR)/vmm/%.o: vmm/%.c $(OBJDIR)/.vars.KERN_CFLAGS
+
+$(OBJDIR)/kern/%.o: lib/%.c $(OBJDIR)/.vars.KERN_CFLAGS
 	@echo + cc $<
 	@mkdir -p $(@D)
 	$(V)$(CC) -nostdinc $(KERN_CFLAGS) -c -o $@ $<
@@ -138,6 +142,9 @@ $(OBJDIR)/kern/kernel: $(KERN_OBJFILES) $(KERN_BINFILES) kern/guest_kernel.ld \
 	$(V)$(LD) -o $@ $(KERN_LDFLAGS) $(KERN_OBJFILES) $(GCC_LIB) -b binary $(KERN_BINFILES)
 	$(V)$(OBJDUMP) -S $@ > $@.asm
 	$(V)$(NM) -n $@ > $@.sym
+
+all: $(OBJDIR)/kern/kernel
+
 else
 # How to build the kernel itself
 $(OBJDIR)/kern/kernel: $(KERN_OBJFILES) $(KERN_BINFILES) kern/kernel.ld \
@@ -146,9 +153,7 @@ $(OBJDIR)/kern/kernel: $(KERN_OBJFILES) $(KERN_BINFILES) kern/kernel.ld \
 	$(V)$(LD) -o $@ $(KERN_LDFLAGS) $(KERN_OBJFILES) $(GCC_LIB) -b binary $(KERN_BINFILES)
 	$(V)$(OBJDUMP) -S $@ > $@.asm
 	$(V)$(NM) -n $@ > $@.sym
-endif
 
-ifndef GUEST_KERN
 # How to build the kernel disk image
 $(OBJDIR)/kern/kernel.img: $(OBJDIR)/kern/kernel $(OBJDIR)/boot/boot
 	@echo + mk $@
@@ -157,12 +162,7 @@ $(OBJDIR)/kern/kernel.img: $(OBJDIR)/kern/kernel $(OBJDIR)/boot/boot
 	$(V)dd if=$(OBJDIR)/kern/kernel of=$(OBJDIR)/kern/kernel.img~ seek=1 conv=notrunc 2>/dev/null
 	$(V)mv $(OBJDIR)/kern/kernel.img~ $(OBJDIR)/kern/kernel.img
 
-
 all: $(OBJDIR)/kern/kernel.img
-
-else
-
-all: $(OBJDIR)/kern/kernel
 
 endif
 

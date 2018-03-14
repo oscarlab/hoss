@@ -78,11 +78,11 @@ check_regs(struct regs* a, const char *an, struct regs* b, const char *bn,
 
 #undef CHECK
 
-	cprintf("Registers %s ", testname);
+
 	if (!mismatch)
-		cprintf("OK\n");
+		cprintf("Registers %s OK\n", testname);
 	else
-		cprintf("MISMATCH\n");
+		cprintf("Registers %s MISMATCH\n", testname);
 }
 
 static void

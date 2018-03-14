@@ -1,8 +1,6 @@
 #include <inc/fs.h>
 #include <inc/lib.h>
 
-
-
 #define SECTSIZE	512			// bytes per disk sector
 #define BLKSECTS	(BLKSIZE / SECTSIZE)	// sectors per block
 
@@ -17,42 +15,42 @@ struct Super *super;		// superblock
 uint32_t *bitmap;		// bitmap blocks mapped in memory
 
 /* ide.c */
-bool ide_probe_disk1(void);
-void ide_set_disk(int diskno);
-int ide_read(uint32_t secno, void *dst, size_t nsecs);
-int ide_write(uint32_t secno, const void *src, size_t nsecs);
+bool   ide_probe_disk1(void);
+void   ide_set_disk(int diskno);
+int    ide_read(uint32_t secno, void *dst, size_t nsecs);
+int    ide_write(uint32_t secno, const void *src, size_t nsecs);
 
 /* bc.c */
-void* diskaddr(uint64_t blockno);
-bool va_is_mapped(void *va);
-bool va_is_dirty(void *va);
-void flush_block(void *addr);
-void bc_init(void);
+void*  diskaddr(uint64_t blockno);
+bool   va_is_mapped(void *va);
+bool   va_is_dirty(void *va);
+void   flush_block(void *addr);
+void   bc_init(void);
 
 /* fs.c */
-void fs_init(void);
-int file_get_block(struct File *f, uint32_t file_blockno, char **pblk);
-int file_create(const char *path, struct File **f);
-int file_open(const char *path, struct File **f);
+void   fs_init(void);
+int    file_get_block(struct File *f, uint32_t file_blockno, char **pblk);
+int    file_create(const char *path, struct File **f);
+int    file_open(const char *path, struct File **f);
 ssize_t file_read(struct File *f, void *buf, size_t count, off_t offset);
-int file_write(struct File *f, const void *buf, size_t count, off_t offset);
-int file_set_size(struct File *f, off_t newsize);
-void file_flush(struct File *f);
-int file_remove(const char *path);
-void fs_sync(void);
-
+int    file_write(struct File *f, const void *buf, size_t count, off_t offset);
+int    file_set_size(struct File *f, off_t newsize);
+void   file_flush(struct File *f);
+int    file_remove(const char *path);
+void   fs_sync(void);
+int    file_block_walk(struct File *f, uint32_t filebno, uint32_t **ppdiskbno, bool alloc);
 /* int	map_block(uint32_t); */
-bool block_is_free(uint32_t blockno);
-int alloc_block(void);
+bool   block_is_free(uint32_t blockno);
+int    alloc_block(void);
 
 /* test.c */
-void fs_test(void);
+void   fs_test(void);
 
 #ifdef VMM_GUEST
 /* vmx_host.c */
 uint64_t get_host_fd(); 
-int host_read(uint32_t secno, void *dst, size_t nsecs);
-int host_write(uint32_t secno, const void *src, size_t nsecs);
-void host_ipc_init();
+int    host_read(uint32_t secno, void *dst, size_t nsecs);
+int    host_write(uint32_t secno, const void *src, size_t nsecs);
+void   host_ipc_init();
 #endif
 

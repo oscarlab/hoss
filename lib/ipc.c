@@ -57,6 +57,7 @@ ipc_host_recv(void *pg) {
 
 // Access to host IPC interface through VMCALL.
 // Should behave similarly to ipc_send, except replacing the system call with a vmcall.
+// This function should also convert pg from guest virtual to guest physical for the IPC call
 void
 ipc_host_send(envid_t to_env, uint32_t val, void *pg, int perm)
 {
@@ -64,7 +65,7 @@ ipc_host_send(envid_t to_env, uint32_t val, void *pg, int perm)
 	panic("ipc_send not implemented in VM guest");
 }
 
-#endif
+#endif // VMM_GUEST
 
 // Find the first environment of the given type.  We'll use this to
 // find special environments.

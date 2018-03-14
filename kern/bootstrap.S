@@ -26,14 +26,14 @@ _head64:
     movl $VMX_VMCALL_MBMAP, %eax
     vmcall
 #endif
-
+	
     movl $multiboot_info, %eax
     movl %ebx, (%eax)
 
 #ifndef VMM_GUEST
     movw $0x1234,0x472			# warm boot
 #endif
-
+	
 # Reset the stack pointer in case we didn't come from the loader
     movl $0x7c00,%esp
 

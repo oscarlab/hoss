@@ -99,6 +99,10 @@ void free_guest_mem(epte_t* eptrt) {
 
 // Add Page pp to a guest's EPT at guest physical address gpa
 //  with permission perm.  eptrt is the EPT root.
+//
+// This function should increment the reference count of pp on a
+//   successful insert.  If you overwrite a mapping, your code should
+//   decrement the reference count of the old mapping.
 // 
 // Return 0 on success, <0 on failure.
 //

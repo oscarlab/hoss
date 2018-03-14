@@ -128,7 +128,6 @@ read_section_headers(uintptr_t elfhdr, uintptr_t to_va)
 		sec_name->sh_offset, &kvoffset);
 	nametab = (char *)((char *)kvbase + temp) + OFFSET_CORRECT(sec_name->sh_offset);	
 
-    
 	for (i = 0; i < numSectionHeaders; i++)
 	{
 		name = (char *)(nametab + secthdr_ptr[i]->sh_name);
